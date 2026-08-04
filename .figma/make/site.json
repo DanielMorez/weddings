@@ -1,0 +1,10 @@
+{
+  "description": "Create an immersive wedding invitation experience with smooth scrolling, real-time countdowns, and interactive RSVP features, enhancing guest engagement.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
