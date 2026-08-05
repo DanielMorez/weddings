@@ -1,6 +1,6 @@
 # Wedding site — Rasim & Anna
 
-Production-ready деплой: **Caddy** (HTTPS) + **Docker Compose** + API анкеты гостя → **Telegram**.
+Production-ready деплой: **Caddy** (HTTPS) + **Docker Compose** + API анкеты гостя → **Telegram-группа**.
 
 Домен: **расим-и-анна.рф**
 
@@ -9,18 +9,23 @@ Production-ready деплой: **Caddy** (HTTPS) + **Docker Compose** + API ан
 | Сервис | Роль |
 |--------|------|
 | `caddy` | TLS (Let's Encrypt), статика `dist/`, reverse proxy `/api/*` |
-| `api` | Hono: валидация RSVP, отправка в Telegram-канал, httpOnly cookie |
+| `api` | Hono: валидация RSVP, отправка в Telegram-группу, httpOnly cookie |
 
 ## Быстрый старт
 
-### 1. Telegram-бот
+### 1. Telegram-бот и группа
 
 1. Создайте бота у [@BotFather](https://t.me/BotFather) → получите `TELEGRAM_BOT_TOKEN`.
-2. Создайте канал (или используйте существующий).
-3. Добавьте бота в канал **администратором** с правом публиковать сообщения.
-4. Узнайте `TELEGRAM_CHANNEL_ID` (обычно вида `-100…`):
-   - перешлите любое сообщение из канала боту [@userinfobot](https://t.me/userinfobot) / [@getidsbot](https://t.me/getidsbot),  
-   - или откройте `https://api.telegram.org/bot<TOKEN>/getUpdates` после поста в канале.
+2. Создайте группу (или используйте существующую) и **добавьте бота** в неё.
+3. Узнайте `TELEGRAM_CHAT_ID` (обычно вида `-100…`):
+   - перешлите любое сообщение из группы боту [@userinfobot](https://t.me/userinfobot) / [@getidsbot](https://t.me/getidsbot),
+   - или напишите в группе и откройте `https://api.telegram.org/bot<TOKEN>/getUpdates` — в ответе будет `"chat":{"id":-100...}`.
+4. Проверка:
+   ```bash
+   curl -s "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+     -d chat_id="$TELEGRAM_CHAT_ID" \
+     -d text="test"
+   ```
 
 ### 2. Переменные окружения
 
@@ -32,9 +37,17 @@ cp .env.example .env
 
 ```env
 TELEGRAM_BOT_TOKEN=...
-TELEGRAM_CHANNEL_ID=-100...
+TELEGRAM_CHAT_ID=-100...
 DOMAIN=расим-и-анна.рф
 COOKIE_SECURE=true
+```
+
+`TELEGRAM_CHANNEL_ID` по-прежнему читается как fallback, если `TELEGRAM_CHAT_ID` не задан.
+
+После смены `.env`:
+
+```bash
+docker compose up -d --force-recreate api
 ```
 
 ### 3. DNS
@@ -65,7 +78,7 @@ docker compose down
 
 После успешной отправки API ставит cookie `rsvp_sent` (HttpOnly, Secure, SameSite=Lax, 1 год). Повторная отправка с того же браузера отклоняется (`409`); на сайте сразу показывается «Спасибо!».
 
-Поля: имя, присутствие, напитки, аллергия, +1.
+Поля: имя, присутствие, напитки (вино красное / белое, шампанское, водка, коньяк, самогон, безалкогольные), аллергия, +1.
 
 ## Локальная разработка
 

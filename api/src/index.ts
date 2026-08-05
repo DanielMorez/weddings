@@ -8,7 +8,8 @@ const COOKIE_MAX_AGE = 60 * 60 * 24 * 365 // 1 year
 
 const PORT = Number(process.env.PORT || 3000)
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? ''
-const TELEGRAM_CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID ?? ''
+const TELEGRAM_CHAT_ID =
+  process.env.TELEGRAM_CHAT_ID || process.env.TELEGRAM_CHANNEL_ID || ''
 const COOKIE_SECURE = process.env.COOKIE_SECURE !== 'false'
 
 type RsvpBody = {
@@ -101,7 +102,7 @@ function formatTelegramMessage(data: ValidRsvp): string {
 }
 
 async function sendTelegramMessage(text: string): Promise<void> {
-  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHANNEL_ID) {
+  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
     throw new Error('Telegram is not configured')
   }
 
@@ -110,7 +111,7 @@ async function sendTelegramMessage(text: string): Promise<void> {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      chat_id: TELEGRAM_CHANNEL_ID,
+      chat_id: TELEGRAM_CHAT_ID,
       text,
       parse_mode: 'HTML',
       disable_web_page_preview: true,
