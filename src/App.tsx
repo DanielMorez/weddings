@@ -5,6 +5,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import imgHeroBlock from '@/imports/MobileWeddingV2/d8c693345d1907997218ddbfa8cb1df89ba119c7.png'
 import imgFormalPortrait from '@/imports/MobileWeddingV2/4875327f91ae4c0ef4f93d30c8e1ccf00ee8e0af.png'
 import imgTimerBlock from '@/imports/MobileWeddingV2/99b2d9dbff6b24a25c62c037179ed9d4a4d556af.png'
+import weddingTrack from '@/imports/Audio/Би-2 - Молитва (OST Метро).mp3'
 import { getRsvpStatus, submitRsvp } from '@/api/rsvp'
 
 // Register ScrollTrigger once at module level — safe to call multiple times
@@ -45,7 +46,7 @@ const WEDDING_DATE = new Date('2026-09-19T16:30:00')
  *   3. gsap.ticker.lagSmoothing(0) — prevent GSAP from dropping frames when the
  *      tab is backgrounded, which would cause Lenis to stutter on refocus.
  */
-function useLenis() {
+function useLenis(enabled: boolean) {
   const lenisRef = useRef<Lenis | null>(null)
 
   useEffect(() => {
@@ -53,15 +54,17 @@ function useLenis() {
     const ease = (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t))
 
     const lenis = new Lenis({
-      duration:        1.5,   // scroll animation duration in seconds
-      easing:          ease,  // custom exponential ease-out
-      smoothWheel:     true,  // inertial wheel scrolling
-      syncTouch:       true,  // momentum interpolation on touch devices (renamed from smoothTouch in Lenis v1.1+)
-      touchMultiplier: 2,     // finger sensitivity multiplier
+      duration:        1.8,
+      easing:          ease,
+      smoothWheel:     true,
+      wheelMultiplier: 0.85,
+      syncTouch:       false, // native touch momentum — less fight with the OS
+      touchMultiplier: 1.2,
       infinite:        false,
     })
 
     lenisRef.current = lenis
+    lenis.stop() // gate holds scroll until guest opens the invitation
 
     // 1. Forward every interpolated scroll event to ScrollTrigger so scrub
     //    animations stay in sync with Lenis position, not native scroll.
@@ -83,6 +86,13 @@ function useLenis() {
       ScrollTrigger.getAll().forEach((t) => t.kill())
     }
   }, [])
+
+  useEffect(() => {
+    const lenis = lenisRef.current
+    if (!lenis) return
+    if (enabled) lenis.start()
+    else lenis.stop()
+  }, [enabled])
 
   return lenisRef
 }
@@ -120,8 +130,8 @@ function useScrollReveal() {
  * Each tween uses:
  *   - yPercent: fractional vertical offset as % of the element's own height
  *   - ease: "none" — scrub handles the easing; a curve here doubles it
- *   - scrub: true — ties animation progress directly to scroll position so
- *     Lenis's interpolated position drives the depth effect frame by frame
+ *   - scrub: 1.2 — slight lag so parallax follows scroll smoothly without jitter
+ *     Lenis's interpolated position still drives the depth effect
  *
  * The function is called after Lenis is mounted so ScrollTrigger reads the
  * correct scroll proxy from Lenis → gsap.ticker.
@@ -148,7 +158,7 @@ function useParallax(refs: {
               trigger: refs.heroSection.current,
               start:   'top top',   // when section top hits viewport top
               end:     'bottom top',// when section bottom leaves top
-              scrub:   true,        // frame-by-frame lock to scroll position
+              scrub:   1.2,         // slight lag so parallax doesn't jitter with scroll
             },
           },
         )
@@ -166,7 +176,7 @@ function useParallax(refs: {
               trigger: refs.timerSection.current,
               start:   'top bottom', // starts animating before section enters
               end:     'bottom top',
-              scrub:   true,
+              scrub:   1.2,
             },
           },
         )
@@ -184,7 +194,7 @@ function useParallax(refs: {
               trigger: refs.portraitWrap.current,
               start:   'top bottom',
               end:     'bottom top',
-              scrub:   true,
+              scrub:   1.2,
             },
           },
         )
@@ -465,6 +475,128 @@ function SuccessState() {
   )
 }
 
+// ─── Music gate + mute ───────────────────────────────────────────────────────
+function MusicGate({
+  visible,
+  fading,
+  onOpen,
+}: {
+  visible: boolean
+  fading: boolean
+  onOpen: () => void
+}) {
+  if (!visible) return null
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Свадебное приглашение"
+      style={{
+        position:       'fixed',
+        inset:          0,
+        zIndex:         1000,
+        background:     CREAM,
+        display:        'flex',
+        flexDirection:  'column',
+        alignItems:     'center',
+        justifyContent: 'center',
+        padding:        '48px 32px',
+        textAlign:      'center',
+        opacity:        fading ? 0 : 1,
+        transition:     'opacity 0.55s cubic-bezier(0.16,1,0.3,1)',
+        pointerEvents:  fading ? 'none' : 'auto',
+      }}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '28px', maxWidth: '360px', width: '100%' }}>
+        <p style={{ ...cg(500, 13), color: BURGUNDY, textTransform: 'uppercase', letterSpacing: '0.14em' }}>
+          Свадебное приглашение
+        </p>
+        <p style={{
+          fontFamily: '"Pinyon Script", cursive',
+          fontWeight: 400,
+          fontSize:   '64px',
+          color:      BURGUNDY,
+          lineHeight: 1,
+          margin:     0,
+        }}>
+          Rasim &amp; Anna
+        </p>
+        <div style={{ width: '64px', height: '1px', background: 'rgba(110,28,36,0.35)' }} />
+        <p style={{ ...cg(400, 18), color: MUTED, letterSpacing: '0.08em' }}>
+          19 . 09 . 2026
+        </p>
+        <button
+          type="button"
+          onClick={onOpen}
+          style={{
+            marginTop:      '24px',
+            display:        'flex',
+            alignItems:     'center',
+            justifyContent: 'center',
+            padding:        '16px 48px',
+            width:          '100%',
+            maxWidth:       '280px',
+            background:     BURGUNDY,
+            border:         'none',
+            borderRadius:   '2px',
+            cursor:         'pointer',
+            boxShadow:      '0 4px 6px rgba(0,0,0,0.12)',
+          }}
+        >
+          <span style={{ ...cg(600, 13), color: CREAM, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+            Открыть
+          </span>
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function MusicMuteButton({
+  muted,
+  onToggle,
+}: {
+  muted: boolean
+  onToggle: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-label={muted ? 'Включить музыку' : 'Выключить музыку'}
+      style={{
+        position:       'fixed',
+        right:          '20px',
+        bottom:         '20px',
+        zIndex:         900,
+        width:          '48px',
+        height:         '48px',
+        display:        'flex',
+        alignItems:     'center',
+        justifyContent: 'center',
+        background:     CREAM,
+        border:         `1px solid ${BURGUNDY}`,
+        borderRadius:   '2px',
+        cursor:         'pointer',
+        boxShadow:      '0 2px 8px rgba(26,5,8,0.08)',
+      }}
+    >
+      {muted ? (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path d="M11 5L6 9H3v6h3l5 4V5z" stroke={BURGUNDY} strokeWidth="1.5" strokeLinejoin="round" />
+          <path d="M16 9.5l5 5M21 9.5l-5 5" stroke={BURGUNDY} strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+      ) : (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path d="M11 5L6 9H3v6h3l5 4V5z" stroke={BURGUNDY} strokeWidth="1.5" strokeLinejoin="round" />
+          <path d="M15.5 8.5a4.5 4.5 0 010 7M18.5 6a8 8 0 010 12" stroke={BURGUNDY} strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+      )}
+    </button>
+  )
+}
+
 // ─── Divider ─────────────────────────────────────────────────────────────────
 function Divider() {
   return (
@@ -476,10 +608,24 @@ function Divider() {
 
 // ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
+  const [entered, setEntered] = useState(false)
+  const [gateFading, setGateFading] = useState(false)
+  const [muted, setMuted] = useState(false)
+  const audioRef = useRef<HTMLAudioElement>(null)
+
   // Lenis must initialise before useParallax registers ScrollTriggers so that
   // GSAP's ticker is already driving Lenis when the first trigger fires.
-  useLenis()
+  useLenis(entered)
   useScrollReveal()
+
+  useEffect(() => {
+    if (entered) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [entered])
 
   // ── Element refs for GSAP parallax targets ────────────────────────────────
   const heroSectionRef  = useRef<HTMLElement>(null)
@@ -529,6 +675,33 @@ export default function App() {
     }
   }, [])
 
+  const handleOpenInvitation = async () => {
+    const audio = audioRef.current
+    if (audio) {
+      audio.volume = 0.65
+      audio.muted = false
+      try {
+        await audio.play()
+      } catch {
+        /* Autoplay may still fail; guest can use mute toggle later */
+      }
+    }
+    setMuted(false)
+    setGateFading(true)
+    window.setTimeout(() => setEntered(true), 550)
+  }
+
+  const toggleMute = () => {
+    const audio = audioRef.current
+    if (!audio) return
+    const next = !muted
+    audio.muted = next
+    if (!next && audio.paused) {
+      void audio.play().catch(() => {})
+    }
+    setMuted(next)
+  }
+
   const toggleDrink = (d: string) =>
     setDrinks((prev) => {
       const next = new Set(prev)
@@ -577,6 +750,17 @@ export default function App() {
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div style={{ background: CREAM, display: 'flex', flexDirection: 'column', width: '100%', overflowX: 'hidden' }}>
+      <audio ref={audioRef} src={weddingTrack} loop preload="auto" playsInline />
+
+      <MusicGate
+        visible={!entered}
+        fading={gateFading}
+        onOpen={handleOpenInvitation}
+      />
+
+      {entered && (
+        <MusicMuteButton muted={muted} onToggle={toggleMute} />
+      )}
 
       {/* ── HERO ──────────────────────────────────────────────────────── */}
       <section
