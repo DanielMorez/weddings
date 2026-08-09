@@ -2,8 +2,8 @@ import { useState, useEffect, useRef, type FormEvent } from 'react'
 import Lenis from 'lenis'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import imgHeroBlock from '@/imports/MobileWeddingV2/d8c693345d1907997218ddbfa8cb1df89ba119c7.png'
-import imgFormalPortrait from '@/imports/MobileWeddingV2/4875327f91ae4c0ef4f93d30c8e1ccf00ee8e0af.png'
+import imgHeroBlock from '@/imports/MobileWeddingV2/4875327f91ae4c0ef4f93d30c8e1ccf00ee8e0af.png'
+import imgFormalPortrait from '@/imports/MobileWeddingV2/photo_2026-08-09_213029.png'
 import imgTimerBlock from '@/imports/MobileWeddingV2/99b2d9dbff6b24a25c62c037179ed9d4a4d556af.png'
 import weddingTrack from '@/imports/Audio/Би-2 - Молитва (OST Метро).mp3'
 import { getRsvpStatus, submitRsvp } from '@/api/rsvp'
@@ -784,7 +784,7 @@ export default function App() {
             ref={heroImgRef}
             alt=""
             src={imgHeroBlock}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', willChange: 'transform' }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', willChange: 'transform' }}
           />
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(77,11,18,0.5)' }} />
         </div>
