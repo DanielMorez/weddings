@@ -759,7 +759,7 @@ export default function App() {
             ref={heroImgRef}
             alt=""
             src={imgHeroBlock}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', willChange: 'transform' }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', willChange: 'transform' }}
           />
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(77,11,18,0.5)' }} />
         </div>
