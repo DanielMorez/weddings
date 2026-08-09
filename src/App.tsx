@@ -2,8 +2,7 @@ import { useState, useEffect, useRef, type FormEvent } from 'react'
 import Lenis from 'lenis'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import imgHeroBlock from '@/imports/MobileWeddingV2/d8c693345d1907997218ddbfa8cb1df89ba119c7.png'
-import imgFormalPortrait from '@/imports/MobileWeddingV2/4875327f91ae4c0ef4f93d30c8e1ccf00ee8e0af.png'
+import imgHeroBlock from '@/imports/MobileWeddingV2/4875327f91ae4c0ef4f93d30c8e1ccf00ee8e0af.png'
 import imgTimerBlock from '@/imports/MobileWeddingV2/99b2d9dbff6b24a25c62c037179ed9d4a4d556af.png'
 import weddingTrack from '@/imports/Audio/Би-2 - Молитва (OST Метро).mp3'
 import { getRsvpStatus, submitRsvp } from '@/api/rsvp'
@@ -125,7 +124,7 @@ function useScrollReveal() {
 // ─── useParallax ─────────────────────────────────────────────────────────────
 /**
  * Registers GSAP ScrollTrigger parallax animations on the hero and timer
- * background images, plus a subtle counter-scroll on the portrait photo.
+ * background images.
  *
  * Each tween uses:
  *   - yPercent: fractional vertical offset as % of the element's own height
@@ -141,8 +140,6 @@ function useParallax(refs: {
   heroSection: React.RefObject<HTMLElement | null>
   timerImg:    React.RefObject<HTMLImageElement | null>
   timerSection:React.RefObject<HTMLElement | null>
-  portraitImg: React.RefObject<HTMLImageElement | null>
-  portraitWrap:React.RefObject<HTMLDivElement | null>
 }) {
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -175,24 +172,6 @@ function useParallax(refs: {
             scrollTrigger: {
               trigger: refs.timerSection.current,
               start:   'top bottom', // starts animating before section enters
-              end:     'bottom top',
-              scrub:   1.2,
-            },
-          },
-        )
-      }
-
-      // ── Portrait: subtle counter-scroll for depth against the border frame
-      if (refs.portraitImg.current && refs.portraitWrap.current) {
-        gsap.fromTo(
-          refs.portraitImg.current,
-          { yPercent: -4 },
-          {
-            yPercent: 4,
-            ease: 'none',
-            scrollTrigger: {
-              trigger: refs.portraitWrap.current,
-              start:   'top bottom',
               end:     'bottom top',
               scrub:   1.2,
             },
@@ -632,16 +611,12 @@ export default function App() {
   const heroImgRef      = useRef<HTMLImageElement>(null)
   const timerSectionRef = useRef<HTMLElement>(null)
   const timerImgRef     = useRef<HTMLImageElement>(null)
-  const portraitWrapRef = useRef<HTMLDivElement>(null)
-  const portraitImgRef  = useRef<HTMLImageElement>(null)
 
   useParallax({
     heroImg:      heroImgRef,
     heroSection:  heroSectionRef,
     timerImg:     timerImgRef,
     timerSection: timerSectionRef,
-    portraitImg:  portraitImgRef,
-    portraitWrap: portraitWrapRef,
   })
 
   // ── Live countdown ────────────────────────────────────────────────────────
@@ -826,27 +801,6 @@ export default function App() {
           <p style={{ ...cg(600, 13), color: INK, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
             Суббота &bull; 16:30
           </p>
-        </div>
-
-        {/*
-          Portrait frame — overflow:hidden clips the image during its counter-scroll.
-          GSAP moves portraitImgRef by ±4% of its height for a subtle depth push.
-        */}
-        <div
-          data-reveal
-          style={{ border: `1px solid ${BURGUNDY}`, borderRadius: '2px', padding: '8px', height: '460px', transitionDelay: '180ms' }}
-        >
-          <div
-            ref={portraitWrapRef}
-            style={{ width: '100%', height: '100%', overflow: 'hidden', borderRadius: '1px' }}
-          >
-            <img
-              ref={portraitImgRef}
-              alt="Rasim and Anna"
-              src={imgFormalPortrait}
-              style={{ width: '100%', height: '108%', objectFit: 'cover', display: 'block', willChange: 'transform' }}
-            />
-          </div>
         </div>
       </section>
 
